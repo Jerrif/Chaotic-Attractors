@@ -47,9 +47,9 @@ public class Swarm : MonoBehaviour {
             points[i] = point;
             point.localScale = scale;
             point.localPosition = new Vector3(
-                Random.Range(-1.003f, 1.001f),
-                Random.Range(-1.003f, 1.001f),
-                Random.Range(-1.003f, 1.001f));
+                Random.Range(-0.001f, 0.001f),
+                Random.Range(-0.001f, 0.001f),
+                Random.Range(-0.001f, 0.001f));
             // point.localPosition = new Vector3(
             //     Random.Range(-0.003f, 0.001f),
             //     Random.Range(-0.003f, 0.001f),
@@ -81,11 +81,7 @@ public class Swarm : MonoBehaviour {
                 continue;
             }
             if (pointData[i].isAlive && isWhack(point.localPosition)) {
-                // print("Woah one of these bitches went whack");
-                // Debug.Log("Point error | Start: " + pointData[i].startPos.ToString("F8") + " Current: " + point.localPosition.ToString("F8"));
                 string s = pointData[i].startPos.ToString("F8");
-
-                // Debug.Log("Point error | Start: " + pointData[i].startPos.ToString("{0,20:F8}"));
                 Debug.Log(s + " Dist: " + Vector3.Distance(pointData[i].startPos, Vector3.zero));
                 pointData[i].isAlive = false;
                 continue;
