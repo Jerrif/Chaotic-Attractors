@@ -14,20 +14,39 @@ public class Swarm : MonoBehaviour {
     Transform[] points;
 
     public delegate Vector3 Function(Vector3 pos, float timestep);
-    // TODO: how to add a name in here?
-    private struct AttractorData {
+
+    public struct AttractorData {
         public Function function;
         public float cameraPos;
     }
 
-    AttractorData[] attractors = new AttractorData[] {
+    public enum AttractorName {Lorenz, LorenzGPT, LorenzGPTVerlet, Unnamed};
+
+    static AttractorData[] attractors = new AttractorData[] {
         new AttractorData {
             function = Attractors.Lorenz,
+            cameraPos = 70f },
+        new AttractorData {
+            function = Attractors.LorenzGPT,
+            cameraPos = 70f },
+        new AttractorData {
+            function = Attractors.LorenzGPTVerlet,
             cameraPos = 70f },
         new AttractorData {
             function = Attractors.Unnamed,
             cameraPos = 110f },
         };
+
+    // static Function[] functions = {Attractors.Lorenz, Attractors.LorenzGPT, Attractors.Unnamed};
+
+    public static AttractorData GetAttractor(AttractorName name) {
+        return attractors[(int)name];
+    }
+
+    [SerializeField]
+    AttractorName attractorName;
+
+    AttractorData attractor;
 
     private struct PointData {
         public bool isAlive;
@@ -37,6 +56,7 @@ public class Swarm : MonoBehaviour {
     PointData[] pointData;
 
     void Awake() {
+        attractor = GetAttractor(attractorName);
         var scale = Vector3.one * 0.05f;
         points = new Transform[resolution];
         pointData = new PointData[resolution];
@@ -87,8 +107,13 @@ public class Swarm : MonoBehaviour {
                 continue;
             }
             // var newPos = Attractors.Unnamed(point.localPosition, timestep);
-            var newPos = attractors[1].function(point.localPosition, timestep);
-            point.localPosition = newPos;
+            // var newPos = attractors[1].function(point.localPosition, timestep);
+            // var newPos = attractors[2].function(point.localPosition, timestep);
+
+            // TODO: look into returning just dx,dy,dz from LorenzGPT, then using the Verlet Integration on that
+            // TODO: the point.localPosition would then have to be += newPos I think?
+            var accel = attractor.function(point.localPosition, timestep);
+            point.localPosition += accel * timestep;
         }
     }
 

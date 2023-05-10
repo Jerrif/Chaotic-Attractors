@@ -13,6 +13,36 @@ public readonly struct Attractors {
         pos.z += (pos.x * pos.y - b * pos.z) * timestep;
         return pos;
     }
+    
+    public static Vector3 LorenzGPT(Vector3 initialPosition, float deltaTime) {
+        float x = initialPosition.x;
+        float y = initialPosition.y;
+        float z = initialPosition.z;
+        const float sigma = 10f, rho = 30f, beta = 2.667f;
+
+        float dx = (sigma * (y - x)) * deltaTime;
+        float dy = (x * (rho - z) - y) * deltaTime;
+        float dz = (x * y - beta * z) * deltaTime;
+
+        x += dx;
+        y += dy;
+        z += dz;
+
+        return new Vector3(x, y, z);
+    }
+
+    public static Vector3 LorenzGPTVerlet(Vector3 initialPosition, float deltaTime) {
+        float x = initialPosition.x;
+        float y = initialPosition.y;
+        float z = initialPosition.z;
+        const float sigma = 10f, rho = 30f, beta = 2.667f;
+
+        float dx = (sigma * (y - x));
+        float dy = (x * (rho - z) - y);
+        float dz = (x * y - beta * z);
+
+        return new Vector3(dx, dy, dz);
+    }
 
     public static Vector4 V4Lorenz(Vector4 pos, float timestep) {
         const float o=10f, r=30f, b=2.667f;
