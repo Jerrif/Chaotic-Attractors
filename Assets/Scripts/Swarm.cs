@@ -13,24 +13,18 @@ public class Swarm : MonoBehaviour {
 
     Transform[] points;
 
-    public delegate Vector3 Function(Vector3 pos, float timestep);
+    public delegate Vector3 Function(Vector3 pos, float speed);
 
     public struct AttractorData {
         public Function function;
         public float cameraPos;
     }
 
-    public enum AttractorName {Lorenz, LorenzGPT, LorenzGPTVerlet, Unnamed};
+    public enum AttractorName {Lorenz, Unnamed};
 
     static AttractorData[] attractors = new AttractorData[] {
         new AttractorData {
             function = Attractors.Lorenz,
-            cameraPos = 70f },
-        new AttractorData {
-            function = Attractors.LorenzGPT,
-            cameraPos = 70f },
-        new AttractorData {
-            function = Attractors.LorenzGPTVerlet,
             cameraPos = 70f },
         new AttractorData {
             function = Attractors.Unnamed,
@@ -51,6 +45,7 @@ public class Swarm : MonoBehaviour {
     private struct PointData {
         public bool isAlive;
         public Vector3 startPos;
+        public Vector3 lastPos;
     }
 
     PointData[] pointData;
@@ -86,6 +81,7 @@ public class Swarm : MonoBehaviour {
             // Debug.Log(point.localPosition.ToString("F8") + " Dist: " + Vector3.Distance(point.localPosition, Vector3.zero));
             pointData[i].isAlive = true;
             pointData[i].startPos = point.localPosition; // NOTE: is this by ref or by val? very important its by val
+            pointData[i].lastPos = point.localPosition;
             point.SetParent(transform, false);
         }
         Debug.Log("\n[Whack Points Start]");
@@ -93,8 +89,8 @@ public class Swarm : MonoBehaviour {
 
     void Update() {
         // float timestep = Time.deltaTime;
-        float timestep = Time.fixedDeltaTime;
-        timestep *= speed;
+        // float timestep = Time.fixedDeltaTime;
+        // timestep *= speed;
         for (int i = 0; i < resolution; i++) {
             Transform point = points[i]; // I could put this below the first if, but looks nicer here
             if (!pointData[i].isAlive) {
@@ -106,14 +102,23 @@ public class Swarm : MonoBehaviour {
                 pointData[i].isAlive = false;
                 continue;
             }
-            // var newPos = Attractors.Unnamed(point.localPosition, timestep);
-            // var newPos = attractors[1].function(point.localPosition, timestep);
-            // var newPos = attractors[2].function(point.localPosition, timestep);
 
-            // TODO: look into returning just dx,dy,dz from LorenzGPT, then using the Verlet Integration on that
-            // TODO: the point.localPosition would then have to be += newPos I think?
-            var accel = attractor.function(point.localPosition, timestep);
-            point.localPosition += accel * timestep;
+            /////////////////////////////// Verlet integration /////////////////////////
+            // Vector3 velocity = point.localPosition - pointData[i].lastPos;         //
+            // pointData[i].lastPos = point.localPosition;                            //
+            // var accel = attractor.function(point.localPosition, timestep) * speed; //
+            // point.localPosition += (velocity + accel) * (timestep*timestep);       //
+            ////////////////////////////////////////////////////////////////////////////
+
+            // NOTE: alter the other attractor funcs to return an offset, rather than doing += themselves
+            // also, maybe take out dt from their params too
+            // point.localPosition += attractor.function(point.localPosition) * timestep;
+            // point.localPosition = attractor.function(point.localPosition) * timestep;
+            
+            // = works with Unnamed, += works with Lorenz
+            point.localPosition = attractor.function(point.localPosition, speed);
+            // point.localPosition += attractor.function(point.localPosition, speed);
+            
         }
     }
 
