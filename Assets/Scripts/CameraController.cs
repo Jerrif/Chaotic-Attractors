@@ -20,7 +20,7 @@ public class CameraController : MonoBehaviour {
     private float orbitDistance;
 
     private Vector3 inputVector;
-    private Vector3 inputVectorRotation;
+    private Vector2 inputVectorRotation;
 
 
 
@@ -44,7 +44,6 @@ public class CameraController : MonoBehaviour {
         dollyFinalDistance = 30f;
         orbitDistance = swarm.attractor.cameraDist;
 
-        // TODO: Delete this if it isn't needed for the rotation!
         // set the initial direction of the thingo
         initialDirection = cameraSingleton.transform.rotation.eulerAngles;
     }
@@ -61,8 +60,6 @@ public class CameraController : MonoBehaviour {
         Vector3 currentPosition = cameraSingleton.transform.position;
         Quaternion currentRotation = cameraSingleton.transform.rotation;
 
-        // Vector3 direction = Vector3.zero;
-
         Vector3 direction = currentRotation * inputVector;
         direction.Normalize();
         Vector3 movementVector = direction * moveSpeed * Time.deltaTime;
@@ -74,9 +71,14 @@ public class CameraController : MonoBehaviour {
     }
 
     void HandleRotation() {
-        if (this.inputVectorRotation == Vector3.zero) {
+        if (inputVectorRotation == Vector2.zero) {
             return;
         }
+
+        // mouse look script from UnityCommunity on github:
+        // https://docs.unity3d.com/ScriptReference/Transform.Rotate.html
+        // also look at:
+        // https://forum.unity.com/threads/a-free-simple-smooth-mouselook.73117/
 
         // Allow the script to clamp based on a desired target value.
         Quaternion targetOrientation = Quaternion.Euler(initialDirection);
@@ -94,22 +96,38 @@ public class CameraController : MonoBehaviour {
 
         // Find the absolute mouse movement value from point zero.
         _mouseAbsolute += _smoothMouse;
+        // _mouseAbsolute += new Vector2(inputVectorRotation.x, inputVectorRotation.y);
 
         // Clamp and apply the local x value first, so as not to be affected by world transforms.
         if (clampInDegrees.x < 360)
             _mouseAbsolute.x = Mathf.Clamp(_mouseAbsolute.x, -clampInDegrees.x * 0.5f, clampInDegrees.x * 0.5f);
 
         var xRotation = Quaternion.AngleAxis(-_mouseAbsolute.y, targetOrientation * Vector3.right);
-        cameraSingleton.transform.localRotation = xRotation;
+        cameraSingleton.transform.localRotation = xRotation; // AHA! this is what zeros out the Z axis
 
-        // Then clamp and apply the global y value.
         if (clampInDegrees.y < 360)
             _mouseAbsolute.y = Mathf.Clamp(_mouseAbsolute.y, -clampInDegrees.y * 0.5f, clampInDegrees.y * 0.5f);
 
         var yRotation = Quaternion.AngleAxis(_mouseAbsolute.x, cameraSingleton.transform.InverseTransformDirection(Vector3.up));
         cameraSingleton.transform.localRotation *= yRotation;
+        
+        // var zRotation = Quaternion.AngleAxis(10f, targetOrientation * Vector3.forward);
+        // cameraSingleton.transform.localRotation *= zRotation;
+
         cameraSingleton.transform.rotation *= targetOrientation;
 
+        // TODO: PLEASE TRY THIS GUYS CODE AT THE BOTTOM HERE. IT LOOKS WAY SIMPLER
+        // https://forum.unity.com/threads/input-system-raw-input-from-mouse.949914/
+        // and this:
+        // https://www.reddit.com/r/Unity3D/comments/ups1or/mouse_delta_in_the_new_input_system_is_too_fast/
+
+
+        // TODO: maybe just read:
+        // https://vionixstudio.com/2022/06/16/unity-quaternion-and-rotation-guide/
+
+        // TODO: watch
+        // https://www.youtube.com/watch?v=tE1qH8OxO2Y
+        
 
     }
 
@@ -121,12 +139,11 @@ public class CameraController : MonoBehaviour {
     void OnMouseRotate(InputValue value) {
         if (!userControlling) {
             userControlling = true;
-            // TODO: Delete this if it isn't needed for the rotation!
-            // set the initial direction of the thingo
+            _mouseAbsolute = Vector2.zero;
+            _smoothMouse = Vector2.zero;
             initialDirection = cameraSingleton.transform.rotation.eulerAngles;
         }
         inputVectorRotation = value.Get<Vector2>();
-        print("raw rotation vector:" + inputVectorRotation);
     }
 
     void OnOrbit() {

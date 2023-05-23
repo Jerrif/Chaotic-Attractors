@@ -18,7 +18,7 @@
                     "name": "MouseRotate",
                     "type": "Value",
                     "id": "1bfe191c-35b7-4f6e-be1a-251b36e61bcf",
-                    "expectedControlType": "Button",
+                    "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": true
@@ -138,7 +138,7 @@
                     "id": "ec47a471-861f-41db-9997-9cea5ac9afbb",
                     "path": "<Mouse>/delta",
                     "interactions": "",
-                    "processors": "",
+                    "processors": "ScaleVector2(x=0.05,y=0.05)",
                     "groups": "Keyboard & Mouse",
                     "action": "MouseRotate",
                     "isComposite": false,
