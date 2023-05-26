@@ -1,0 +1,46 @@
+{
+    "name": "SwarmControls",
+    "maps": [
+        {
+            "name": "Controls",
+            "id": "7c59a32f-1b12-4076-b53d-d5b1a8dda88c",
+            "actions": [
+                {
+                    "name": "ConvergePoints",
+                    "type": "Button",
+                    "id": "59375329-5354-4882-ba41-9822ad06f9c0",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "2f701191-554f-411e-85a7-432b09c17638",
+                    "path": "<Keyboard>/q",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard",
+                    "action": "ConvergePoints",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": [
+        {
+            "name": "Keyboard",
+            "bindingGroup": "Keyboard",
+            "devices": [
+                {
+                    "devicePath": "<Keyboard>",
+                    "isOptional": false,
+                    "isOR": false
+                }
+            ]
+        }
+    ]
+}

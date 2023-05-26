@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class Swarm : MonoBehaviour {
 
@@ -9,7 +10,12 @@ public class Swarm : MonoBehaviour {
     [SerializeField]
     float speed = 1f;
 
+    private bool transitioning = false;
+    private float transitionDuration = 2000f;
+    private float transitionProgress = 0f;
+
     Transform[] points;
+    Vector3[] lerpBeginPos;
 
     public delegate Vector4 Function(Vector4 pos, float speed);
     // public delegate Vector3 Function(Vector4 pos, float speed);
@@ -21,7 +27,7 @@ public class Swarm : MonoBehaviour {
         public Vector3 swarmPositionOffset;
     }
 
-    public enum AttractorName {Lorenz, HyperchaoticLorenz, Unnamed};
+    public enum AttractorName {Lorenz, HyperchaoticLorenz, Unnamed, Unnamed2, Rossler, Rucklidge, Chen, ChenLin, Sprott33};
 
     static AttractorData[] attractors = new AttractorData[] {
         new AttractorData {
@@ -30,11 +36,35 @@ public class Swarm : MonoBehaviour {
             swarmPositionOffset = new Vector3(0, 0, -31) }, // try 20
         new AttractorData {
             function = Attractors.HyperchaoticLorenz,
-            cameraDist = 60f, // 110f
+            cameraDist = 60f,
             swarmPositionOffset = new Vector3(0, 0, -24) },
         new AttractorData {
             function = Attractors.Unnamed,
-            cameraDist = 60f, // 110f
+            cameraDist = 60f,
+            swarmPositionOffset = new Vector3(0, 0, 0) },
+        new AttractorData {
+            function = Attractors.Unnamed2,
+            cameraDist = 60f,
+            swarmPositionOffset = new Vector3(0, 0, 0) },
+        new AttractorData {
+            function = Attractors.Rossler,
+            cameraDist = 25f,
+            swarmPositionOffset = new Vector3(0, 0, 0) },
+        new AttractorData {
+            function = Attractors.Rucklidge,
+            cameraDist = 18f,
+            swarmPositionOffset = new Vector3(0, 0, -6) },
+        new AttractorData {
+            function = Attractors.Chen,
+            cameraDist = 40f,
+            swarmPositionOffset = new Vector3(0, 0, -22.5f) },
+        new AttractorData {
+            function = Attractors.ChenLin,
+            cameraDist = 125,
+            swarmPositionOffset = new Vector3(0, 0, -22.5f) },
+        new AttractorData {
+            function = Attractors.Sprott33,
+            cameraDist = 10,
             swarmPositionOffset = new Vector3(0, 0, 0) },
         };
 
@@ -47,6 +77,7 @@ public class Swarm : MonoBehaviour {
 
     public AttractorData attractor;
 
+    // TODO: a struct of arrays would be more efficient
     private struct PointData {
         public bool isAlive;
         public Vector3 startPos;
@@ -61,6 +92,7 @@ public class Swarm : MonoBehaviour {
         var scale = Vector3.one * 0.05f;
         points = new Transform[resolution];
         pointData = new PointData[resolution];
+        lerpBeginPos = new Vector3[resolution];
 
         for (int i = 0; i < resolution; i++) {
             Transform point = Instantiate(pointPrefab);
@@ -84,14 +116,16 @@ public class Swarm : MonoBehaviour {
             }
             if (pointData[i].isAlive && isWhack(point.localPosition)) {
                 string s = pointData[i].startPos.ToString("F8");
-                Debug.Log(s + " Dist: " + Vector3.Distance(pointData[i].startPos, Vector3.zero));
+                Debug.Log("Whack point: " + s + " Dist: " + Vector3.Distance(pointData[i].startPos, Vector3.zero));
                 pointData[i].isAlive = false;
                 continue;
             }
             
-            // = works with Unnamed, += works with Lorenz
-            point.localPosition = attractor.function(point.localPosition, speed);
-            // point.localPosition += attractor.function(point.localPosition, speed);
+            if (!transitioning) {
+                point.localPosition = attractor.function(point.localPosition, speed);
+            } else {
+                Transition();
+            }
         }
     }
 
@@ -101,4 +135,38 @@ public class Swarm : MonoBehaviour {
         }
         return false;
     }
+
+    void OnConvergePoints() {
+        transitioning = true;
+        transitionProgress = 0f;
+
+        // kinda annoying; For a lerp to work, you need the current pos _from the first frame of the lerp_, not current pos each update
+        // there's probably some workarounds, but idk
+        for (int i=0; i < resolution; i++) {
+            // get the point's current position for the lerp back to 0
+            lerpBeginPos[i] = points[i].localPosition;
+        }
+    }
+
+    void Transition() {
+        transitionProgress += Time.deltaTime;
+        if (transitionProgress >= transitionDuration) {
+            transitioning = false;
+            return;
+        }
+
+        for (int i=0; i < resolution; i++) {
+            Transform point = points[i];
+            Vector3 startPos = pointData[i].startPos;
+            if (!pointData[i].isAlive) {
+                // revive dead points
+                point.localPosition = startPos;
+                pointData[i].isAlive = true;
+                continue;
+            }
+
+            point.localPosition = Vector3.Lerp(lerpBeginPos[i], startPos, transitionProgress / transitionDuration);
+        }
+    }
+    
 }
