@@ -11,7 +11,7 @@ public class Swarm : MonoBehaviour {
     float speed = 1f;
 
     private bool transitioning = false;
-    private float transitionDuration = 2000f;
+    private float transitionDuration = 5f;
     private float transitionProgress = 0f;
 
     Transform[] points;
@@ -33,11 +33,11 @@ public class Swarm : MonoBehaviour {
         new AttractorData {
             function = Attractors.Lorenz,
             cameraDist = 70f,
-            swarmPositionOffset = new Vector3(0, 0, -31) }, // try 20
+            swarmPositionOffset = new Vector3(0, 0, -31f) }, // try 20
         new AttractorData {
             function = Attractors.HyperchaoticLorenz,
             cameraDist = 60f,
-            swarmPositionOffset = new Vector3(0, 0, -24) },
+            swarmPositionOffset = new Vector3(0, 0, -24f) },
         new AttractorData {
             function = Attractors.Unnamed,
             cameraDist = 60f,
@@ -53,18 +53,18 @@ public class Swarm : MonoBehaviour {
         new AttractorData {
             function = Attractors.Rucklidge,
             cameraDist = 18f,
-            swarmPositionOffset = new Vector3(0, 0, -6) },
+            swarmPositionOffset = new Vector3(0, 0, -6f) },
         new AttractorData {
             function = Attractors.Chen,
             cameraDist = 40f,
             swarmPositionOffset = new Vector3(0, 0, -22.5f) },
         new AttractorData {
             function = Attractors.ChenLin,
-            cameraDist = 125,
+            cameraDist = 125f,
             swarmPositionOffset = new Vector3(0, 0, -22.5f) },
         new AttractorData {
             function = Attractors.Sprott33,
-            cameraDist = 10,
+            cameraDist = 10f,
             swarmPositionOffset = new Vector3(0, 0, 0) },
         };
 
@@ -108,23 +108,23 @@ public class Swarm : MonoBehaviour {
         }
     }
 
-    void Update() {
-        for (int i = 0; i < resolution; i++) {
-            Transform point = points[i]; // I could put this below the first if, but looks nicer here
-            if (!pointData[i].isAlive) {
-                continue;
-            }
-            if (pointData[i].isAlive && isWhack(point.localPosition)) {
-                string s = pointData[i].startPos.ToString("F8");
-                Debug.Log("Whack point: " + s + " Dist: " + Vector3.Distance(pointData[i].startPos, Vector3.zero));
-                pointData[i].isAlive = false;
-                continue;
-            }
-            
-            if (!transitioning) {
+    void FixedUpdate() {
+        if (transitioning) {
+            Transition();
+        } else {
+            for (int i = 0; i < resolution; i++) {
+                Transform point = points[i]; // I could put this below the first if, but looks nicer here
+                if (!pointData[i].isAlive) {
+                    continue;
+                }
+                if (pointData[i].isAlive && isWhack(point.localPosition)) {
+                    string s = pointData[i].startPos.ToString("F8");
+                    Debug.Log("Whack point: " + s + " Dist: " + Vector3.Distance(pointData[i].startPos, Vector3.zero));
+                    pointData[i].isAlive = false;
+                    continue;
+                }
+
                 point.localPosition = attractor.function(point.localPosition, speed);
-            } else {
-                Transition();
             }
         }
     }
@@ -135,6 +135,37 @@ public class Swarm : MonoBehaviour {
         }
         return false;
     }
+
+    void OnNextAttractor() {
+        attractorName = (int)attractorName < attractors.Length - 1 ? (AttractorName)attractorName + 1 : (AttractorName)0;
+        print(attractorName);
+        attractor = GetAttractor(attractorName);
+        // ToggleTrails();
+        // transform.position = attractor.swarmPositionOffset;
+        OnConvergePoints();
+    }
+
+    void OnPreviousAttractor() {
+        attractorName = (int)attractorName > 0 ? (AttractorName)attractorName - 1 : (AttractorName)attractors.Length - 1;
+        print(attractorName);
+        attractor = GetAttractor(attractorName);
+        // ToggleTrails();
+        // transform.position = attractor.swarmPositionOffset;
+        OnConvergePoints();
+    }
+
+    // void ToggleTrails() {
+    //     for (int i=0; i < resolution; i++) {
+    //         TrailRenderer trail = points[i].GetComponent<TrailRenderer>();
+    //         trail.emitting = !trail.emitting;
+    //     }
+    // }
+
+    // void ShiftPointsBack() {
+    //     for (int i=0; i < resolution; i++) {
+    //         points[i].localPosition -= attractor.swarmPositionOffset;
+    //     }
+    // }
 
     void OnConvergePoints() {
         transitioning = true;
@@ -149,11 +180,14 @@ public class Swarm : MonoBehaviour {
     }
 
     void Transition() {
-        transitionProgress += Time.deltaTime;
         if (transitionProgress >= transitionDuration) {
             transitioning = false;
             return;
         }
+
+        transitionProgress += Time.deltaTime;
+        float progress = transitionProgress / transitionDuration;
+        progress = progress * progress; // nicer looking lerp
 
         for (int i=0; i < resolution; i++) {
             Transform point = points[i];
@@ -165,8 +199,7 @@ public class Swarm : MonoBehaviour {
                 continue;
             }
 
-            point.localPosition = Vector3.Lerp(lerpBeginPos[i], startPos, transitionProgress / transitionDuration);
+            point.localPosition = Vector3.Slerp(lerpBeginPos[i], startPos, progress);
         }
     }
-    
 }

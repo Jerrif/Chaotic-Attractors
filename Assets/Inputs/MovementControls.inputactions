@@ -1,5 +1,5 @@
 {
-    "name": "Controls",
+    "name": "MovementControls",
     "maps": [
         {
             "name": "Movement",
@@ -185,7 +185,7 @@
                 {
                     "name": "",
                     "id": "a8fa2899-45c8-4761-9325-814057b8635d",
-                    "path": "<Keyboard>/r",
+                    "path": "<Keyboard>/i",
                     "interactions": "",
                     "processors": "",
                     "groups": "Keyboard & Mouse",
