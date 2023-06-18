@@ -10,9 +10,9 @@ public class Swarm : MonoBehaviour {
     [SerializeField]
     float speed = 1f;
 
-    private bool transitioning = false;
-    private float transitionDuration = 5f;
-    private float transitionProgress = 0f;
+    public bool transitioning { get; private set; } = false;
+    public float transitionDuration { get; private set; } = 5f;
+    public float transitionProgress { get; private set; } = 0f;
 
     Transform[] points;
     Vector3[] lerpBeginPos;
@@ -33,11 +33,11 @@ public class Swarm : MonoBehaviour {
         new AttractorData {
             function = Attractors.Lorenz,
             cameraDist = 70f,
-            swarmPositionOffset = new Vector3(0, 0, -31f) }, // try 20
+            swarmPositionOffset = new Vector3(0, 0, 31f) }, // try 20
         new AttractorData {
             function = Attractors.HyperchaoticLorenz,
             cameraDist = 60f,
-            swarmPositionOffset = new Vector3(0, 0, -24f) },
+            swarmPositionOffset = new Vector3(0, 0, 24f) },
         new AttractorData {
             function = Attractors.Unnamed,
             cameraDist = 60f,
@@ -53,15 +53,15 @@ public class Swarm : MonoBehaviour {
         new AttractorData {
             function = Attractors.Rucklidge,
             cameraDist = 18f,
-            swarmPositionOffset = new Vector3(0, 0, -6f) },
+            swarmPositionOffset = new Vector3(0, 0, 6f) },
         new AttractorData {
             function = Attractors.Chen,
             cameraDist = 40f,
-            swarmPositionOffset = new Vector3(0, 0, -22.5f) },
+            swarmPositionOffset = new Vector3(0, 0, 22.5f) },
         new AttractorData {
             function = Attractors.ChenLin,
             cameraDist = 125f,
-            swarmPositionOffset = new Vector3(0, 0, -22.5f) },
+            swarmPositionOffset = new Vector3(0, 0, 0f) },
         new AttractorData {
             function = Attractors.Sprott33,
             cameraDist = 10f,
@@ -88,7 +88,8 @@ public class Swarm : MonoBehaviour {
     void Awake() {
         attractor = GetAttractor(attractorName);
         // move the swarm to be roughly centered on 0, 0, 0
-        transform.position = attractor.swarmPositionOffset;
+        // NOTE: moved to the camera
+        // transform.position = attractor.swarmPositionOffset;
         var scale = Vector3.one * 0.05f;
         points = new Transform[resolution];
         pointData = new PointData[resolution];
@@ -140,8 +141,6 @@ public class Swarm : MonoBehaviour {
         attractorName = (int)attractorName < attractors.Length - 1 ? (AttractorName)attractorName + 1 : (AttractorName)0;
         print(attractorName);
         attractor = GetAttractor(attractorName);
-        // ToggleTrails();
-        // transform.position = attractor.swarmPositionOffset;
         OnConvergePoints();
     }
 
@@ -149,23 +148,8 @@ public class Swarm : MonoBehaviour {
         attractorName = (int)attractorName > 0 ? (AttractorName)attractorName - 1 : (AttractorName)attractors.Length - 1;
         print(attractorName);
         attractor = GetAttractor(attractorName);
-        // ToggleTrails();
-        // transform.position = attractor.swarmPositionOffset;
         OnConvergePoints();
     }
-
-    // void ToggleTrails() {
-    //     for (int i=0; i < resolution; i++) {
-    //         TrailRenderer trail = points[i].GetComponent<TrailRenderer>();
-    //         trail.emitting = !trail.emitting;
-    //     }
-    // }
-
-    // void ShiftPointsBack() {
-    //     for (int i=0; i < resolution; i++) {
-    //         points[i].localPosition -= attractor.swarmPositionOffset;
-    //     }
-    // }
 
     void OnConvergePoints() {
         transitioning = true;

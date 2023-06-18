@@ -7,6 +7,7 @@ public class LerpTest : MonoBehaviour {
 
     public float amplitude = 10f;
     public float period = 5f;
+    private float progress = 0f;
     Vector3 direction;
     Vector3 startPos;
 
@@ -19,16 +20,21 @@ public class LerpTest : MonoBehaviour {
     }
 
     void Update() {
-        float t = Time.fixedTime / period;
-        float dist = amplitude * Sin(t);
-        // Vector3 p = startPos;
-        startPos.x += Sin(t) * direction.x;
-        startPos.y += Cos(t) * direction.y;
-        startPos.z += Sin(t) * direction.z;
+        // float t = Time.fixedTime / period;
+        // float dist = amplitude * Sin(t);
+        // // Vector3 p = startPos;
+        // startPos.x += Sin(t) * direction.x;
+        // startPos.y += Cos(t) * direction.y;
+        // startPos.z += Sin(t) * direction.z;
 
+        float duration = 3f;
+        progress += Time.deltaTime / duration;
+
+        float dist = 30f; // note: dist = distance from START position
         // transform.position = startPos + direction * dist;
+        transform.position = Vector3.Lerp(startPos, startPos + direction * dist, progress);
         // transform.position = startPos + direction;
-        transform.position = startPos;
+        // transform.position = startPos;
     }
 
     void Spiral() {
