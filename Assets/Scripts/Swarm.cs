@@ -17,14 +17,14 @@ public class Swarm : MonoBehaviour {
     Transform[] points;
     Vector3[] lerpBeginPos;
 
+    // TODO: change back to Vector3
     public delegate Vector4 Function(Vector4 pos, float speed);
     // public delegate Vector3 Function(Vector4 pos, float speed);
 
     public struct AttractorData {
         public Function function;
         public float cameraDist;
-        // some attractors just end up at a different place from where they started
-        public Vector3 swarmPositionOffset;
+        public Vector3 swarmPositionOffset; // some attractors are off center
     }
 
     public enum AttractorName {Lorenz, HyperchaoticLorenz, Unnamed, Unnamed2, Rossler, Rucklidge, Chen, ChenLin, Sprott33};
@@ -87,10 +87,6 @@ public class Swarm : MonoBehaviour {
 
     void Awake() {
         attractor = GetAttractor(attractorName);
-        // move the swarm to be roughly centered on 0, 0, 0
-        // NOTE: moved to the camera
-        // transform.position = attractor.swarmPositionOffset;
-        var scale = Vector3.one * 0.05f;
         points = new Transform[resolution];
         pointData = new PointData[resolution];
         lerpBeginPos = new Vector3[resolution];
@@ -98,7 +94,7 @@ public class Swarm : MonoBehaviour {
         for (int i = 0; i < resolution; i++) {
             Transform point = Instantiate(pointPrefab);
             points[i] = point;
-            point.localScale = scale;
+            point.localScale = Vector3.one * 0.15f;
             point.localPosition = new Vector3(
                 Random.Range(-0.001f, 0.001f),
                 Random.Range(-0.001f, 0.001f),
@@ -112,21 +108,22 @@ public class Swarm : MonoBehaviour {
     void FixedUpdate() {
         if (transitioning) {
             Transition();
-        } else {
-            for (int i = 0; i < resolution; i++) {
-                Transform point = points[i]; // I could put this below the first if, but looks nicer here
-                if (!pointData[i].isAlive) {
-                    continue;
-                }
-                if (pointData[i].isAlive && isWhack(point.localPosition)) {
-                    string s = pointData[i].startPos.ToString("F8");
-                    Debug.Log("Whack point: " + s + " Dist: " + Vector3.Distance(pointData[i].startPos, Vector3.zero));
-                    pointData[i].isAlive = false;
-                    continue;
-                }
+            return;
+        }
 
-                point.localPosition = attractor.function(point.localPosition, speed);
+        for (int i = 0; i < resolution; i++) {
+            Transform point = points[i]; // I could put this below the first if, but looks nicer here
+            if (!pointData[i].isAlive) {
+                continue;
             }
+            if (pointData[i].isAlive && isWhack(point.localPosition)) {
+                string s = pointData[i].startPos.ToString("F8");
+                Debug.Log("Whack point: " + s + " Dist: " + Vector3.Distance(pointData[i].startPos, Vector3.zero));
+                pointData[i].isAlive = false;
+                continue;
+            }
+
+            point.localPosition = attractor.function(point.localPosition, speed);
         }
     }
 
@@ -137,6 +134,7 @@ public class Swarm : MonoBehaviour {
         return false;
     }
 
+    // note: these are called by the Input system
     void OnNextAttractor() {
         attractorName = (int)attractorName < attractors.Length - 1 ? (AttractorName)attractorName + 1 : (AttractorName)0;
         print(attractorName);
@@ -156,7 +154,6 @@ public class Swarm : MonoBehaviour {
         transitionProgress = 0f;
 
         // kinda annoying; For a lerp to work, you need the current pos _from the first frame of the lerp_, not current pos each update
-        // there's probably some workarounds, but idk
         for (int i=0; i < resolution; i++) {
             // get the point's current position for the lerp back to 0
             lerpBeginPos[i] = points[i].localPosition;

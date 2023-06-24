@@ -4,14 +4,14 @@ using UnityEngine.InputSystem;
 public class CameraController : MonoBehaviour {
 
     [SerializeField] private Swarm swarm;
-    [SerializeField] public float orbitSpeed = 0.05f;
+    [SerializeField] public float orbitSpeed = 1f; // now scaled w/ deltaTime, used to be 0.05f
 
     private CameraSingleton cameraSingleton;
 
     private Vector3 orbitDistance;
     private bool userControlling = false;
-    private const float moveSpeedChangeAmount = 1f;
-    private const float normalMoveSpeed = 2f;
+    private const float moveSpeedChangeAmount = 5f;
+    private const float normalMoveSpeed = 20f;
     private float moveSpeed = normalMoveSpeed;
 
     private Vector3 movementInput;
@@ -122,44 +122,31 @@ public class CameraController : MonoBehaviour {
     }
 
     void Orbit() {
-        cameraSingleton.transform.RotateAround(swarm.attractor.swarmPositionOffset, Vector3.up, orbitSpeed);
+        cameraSingleton.transform.RotateAround(swarm.attractor.swarmPositionOffset, Vector3.up, orbitSpeed * Time.deltaTime);
 
-        // Vector3 lookDirection = cameraSingleton.transform.position - swarm.attractor.swarmPositionOffset;
         Vector3 lookDirection = swarm.attractor.swarmPositionOffset - cameraSingleton.transform.position;
         float distance = lookDirection.magnitude;
         lookDirection /= distance; // note: equivalent to lookDirection.Normalize() but apparently faster if using magnitude as well
-        // lookDirection.Normalize();
         Quaternion target = Quaternion.LookRotation(lookDirection);
-        // cameraSingleton.transform.rotation = Quaternion.RotateTowards(cameraSingleton.transform.rotation, target, 0.11f);
 
         if (swarm.transitioning) {
             if (swarm.transitionProgress == 0f) {
                 slerpBeginPos = cameraSingleton.transform.rotation;
                 orbitDistanceLerpBeginPos = cameraSingleton.transform.position;
                 positionTarget = swarm.attractor.swarmPositionOffset + lookDirection * -swarm.attractor.cameraDist;
+
+                // note: this just keeps the camera rotating during the transition lerp. It looks p good without it too
+                positionTarget = Quaternion.Euler(0f, orbitSpeed * swarm.transitionDuration, 0f) * positionTarget;
             }
             float progress = swarm.transitionProgress / swarm.transitionDuration;
             
-            // TODO: hmm the position lerp almost works, but the camera seems to lerp to an almost arbitrary position?
-            // it should just slide closer/further-away on its current orbit position
-            // Vector3 positionTarget = new Vector3(
-            //     swarm.attractor.cameraDist,
-            //     cameraSingleton.transform.position.y,
-            //     cameraSingleton.transform.position.z);
-
-            // Vector3 endPosDirectionVector = cameraSingleton.transform.position - swarm.attractor.swarmPositionOffset;
-            // Vector3 endPosDirectionVector = swarm.attractor.swarmPositionOffset - cameraSingleton.transform.position;
-            // endPosDirectionVector.Normalize();
-
-            // cameraSingleton.transform.position = Vector3.Lerp(orbitDistanceLerpBeginPos, positionTarget, MySmoothstep(progress));
             cameraSingleton.transform.position = Vector3.Lerp(orbitDistanceLerpBeginPos, positionTarget, progress);
-
             cameraSingleton.transform.rotation = Quaternion.Slerp(slerpBeginPos, target, MySmoothstep(progress));
         } else {
             cameraSingleton.transform.LookAt(swarm.attractor.swarmPositionOffset);
         }
     }
-
+    
     float MySmoothstep(float t) {
         float start = t * t;
         float end = 1.0f - (1.0f - t) * (1.0f - t);
