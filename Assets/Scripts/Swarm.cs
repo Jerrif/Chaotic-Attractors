@@ -17,9 +17,7 @@ public class Swarm : MonoBehaviour {
     Transform[] points;
     Vector3[] lerpBeginPos;
 
-    // TODO: change back to Vector3
-    public delegate Vector4 Function(Vector4 pos, float deltaTime, float speed);
-    // public delegate Vector3 Function(Vector4 pos, float speed);
+    public delegate Vector3 Function(Vector3 pos, float deltaTime, float speed);
 
     public struct AttractorData {
         public Function function;
@@ -167,7 +165,6 @@ public class Swarm : MonoBehaviour {
     void OnToggleTrails() {
         for (int i=0; i < resolution; i++) {
             TrailRenderer trail = points[i].GetComponent<TrailRenderer>();
-            // trail.emitting = !trail.emitting; // it stills renders the trails???? just doesn't show them?
             trail.enabled = !trail.enabled;
         }
     }
