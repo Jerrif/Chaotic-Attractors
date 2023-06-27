@@ -196,7 +196,7 @@
                 {
                     "name": "",
                     "id": "3fd0a9ae-1bc6-4cc4-b8cf-2a6250113711",
-                    "path": "<Keyboard>/shift",
+                    "path": "<Keyboard>/numpadPlus",
                     "interactions": "",
                     "processors": "",
                     "groups": "Keyboard And Mouse",
@@ -207,7 +207,7 @@
                 {
                     "name": "",
                     "id": "344f237c-24c0-4001-a030-7a613324227f",
-                    "path": "<Keyboard>/ctrl",
+                    "path": "<Keyboard>/numpadMinus",
                     "interactions": "",
                     "processors": "",
                     "groups": "Keyboard And Mouse",

@@ -18,7 +18,7 @@ public class Swarm : MonoBehaviour {
     Vector3[] lerpBeginPos;
 
     // TODO: change back to Vector3
-    public delegate Vector4 Function(Vector4 pos, float speed);
+    public delegate Vector4 Function(Vector4 pos, float deltaTime, float speed);
     // public delegate Vector3 Function(Vector4 pos, float speed);
 
     public struct AttractorData {
@@ -27,24 +27,24 @@ public class Swarm : MonoBehaviour {
         public Vector3 swarmPositionOffset; // some attractors are off center
     }
 
-    public enum AttractorName {Lorenz, HyperchaoticLorenz, Unnamed, Unnamed2, Rossler, Rucklidge, Chen, ChenLin, Sprott33};
+    public enum AttractorName {Lorenz, HyperchaoticLorenz, Unnamed, Unnamed2, Rossler, Rucklidge, Chen, Sprott33, ChenLin};
 
     static AttractorData[] attractors = new AttractorData[] {
         new AttractorData {
             function = Attractors.Lorenz,
-            cameraDist = 70f,
+            cameraDist = 55f,
             swarmPositionOffset = new Vector3(0, 0, 31f) }, // try 20
         new AttractorData {
             function = Attractors.HyperchaoticLorenz,
-            cameraDist = 60f,
+            cameraDist = 55f,
             swarmPositionOffset = new Vector3(0, 0, 24f) },
         new AttractorData {
             function = Attractors.Unnamed,
-            cameraDist = 60f,
+            cameraDist = 55f,
             swarmPositionOffset = new Vector3(0, 0, 0) },
         new AttractorData {
             function = Attractors.Unnamed2,
-            cameraDist = 60f,
+            cameraDist = 55f,
             swarmPositionOffset = new Vector3(0, 0, 0) },
         new AttractorData {
             function = Attractors.Rossler,
@@ -59,13 +59,13 @@ public class Swarm : MonoBehaviour {
             cameraDist = 40f,
             swarmPositionOffset = new Vector3(0, 0, 22.5f) },
         new AttractorData {
-            function = Attractors.ChenLin,
-            cameraDist = 125f,
-            swarmPositionOffset = new Vector3(0, 0, 0f) },
-        new AttractorData {
             function = Attractors.Sprott33,
             cameraDist = 10f,
             swarmPositionOffset = new Vector3(0, 0, 0) },
+        new AttractorData {
+            function = Attractors.ChenLin,
+            cameraDist = 125f,
+            swarmPositionOffset = new Vector3(0, 0, 0f) },
         };
 
     public static AttractorData GetAttractor(AttractorName name) {
@@ -73,7 +73,7 @@ public class Swarm : MonoBehaviour {
     }
 
     [SerializeField]
-    AttractorName attractorName;
+    public AttractorName attractorName {get; private set;}
 
     public AttractorData attractor;
 
@@ -111,8 +111,12 @@ public class Swarm : MonoBehaviour {
             return;
         }
 
+        float deltaTime = Time.deltaTime;
+
         for (int i = 0; i < resolution; i++) {
             Transform point = points[i]; // I could put this below the first if, but looks nicer here
+
+            // TODO: remove all this whack stuff?
             if (!pointData[i].isAlive) {
                 continue;
             }
@@ -123,7 +127,7 @@ public class Swarm : MonoBehaviour {
                 continue;
             }
 
-            point.localPosition = attractor.function(point.localPosition, speed);
+            point.localPosition = attractor.function(point.localPosition, deltaTime, speed);
         }
     }
 
@@ -160,6 +164,14 @@ public class Swarm : MonoBehaviour {
         }
     }
 
+    void OnToggleTrails() {
+        for (int i=0; i < resolution; i++) {
+            TrailRenderer trail = points[i].GetComponent<TrailRenderer>();
+            // trail.emitting = !trail.emitting; // it stills renders the trails???? just doesn't show them?
+            trail.enabled = !trail.enabled;
+        }
+    }
+
     void Transition() {
         if (transitionProgress >= transitionDuration) {
             transitioning = false;
@@ -172,15 +184,18 @@ public class Swarm : MonoBehaviour {
 
         for (int i=0; i < resolution; i++) {
             Transform point = points[i];
-            Vector3 startPos = pointData[i].startPos;
             if (!pointData[i].isAlive) {
                 // revive dead points
-                point.localPosition = startPos;
+                point.localPosition = pointData[i].startPos;
                 pointData[i].isAlive = true;
                 continue;
             }
 
-            point.localPosition = Vector3.Slerp(lerpBeginPos[i], startPos, progress);
+            point.localPosition = Vector3.Slerp(lerpBeginPos[i], pointData[i].startPos, progress);
         }
     }
 }
+
+
+// TODO:
+// https://learn.microsoft.com/en-us/windows/mixed-reality/develop/unity/performance-recommendations-for-unity?tabs=openxr#cpu-to-gpu-performance-recommendations
