@@ -1,0 +1,46 @@
+{
+    "name": "UIControls",
+    "maps": [
+        {
+            "name": "Controls",
+            "id": "d7b7ce8b-3d0d-4627-9e16-bf0a2e0b3c50",
+            "actions": [
+                {
+                    "name": "ToggleUi",
+                    "type": "Button",
+                    "id": "3dc9673b-ea21-4449-b1cd-c71e7473bf36",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "6765fca4-d4a8-4b24-a4ad-9a1b678dbb11",
+                    "path": "<Keyboard>/h",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "KBD",
+                    "action": "ToggleUi",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": [
+        {
+            "name": "KBD",
+            "bindingGroup": "KBD",
+            "devices": [
+                {
+                    "devicePath": "<Keyboard>",
+                    "isOptional": false,
+                    "isOR": false
+                }
+            ]
+        }
+    ]
+}
