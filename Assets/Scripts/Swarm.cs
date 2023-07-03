@@ -3,12 +3,9 @@ using UnityEngine.InputSystem;
 
 public class Swarm : MonoBehaviour {
 
-    [SerializeField]
-    Transform pointPrefab;
-    [SerializeField, Range(1, 1000)]
-    int resolution = 100;
-    [SerializeField]
-    float speed = 1f;
+    [SerializeField] Transform pointPrefab;
+    [SerializeField, Range(1, 10000)] int resolution = 500;
+    [SerializeField] float speed = 1f;
 
     public bool transitioning { get; private set; } = false;
     public float transitionDuration { get; private set; } = 5f;
@@ -31,7 +28,7 @@ public class Swarm : MonoBehaviour {
         new AttractorData {
             function = Attractors.Lorenz,
             cameraDist = 55f,
-            swarmPositionOffset = new Vector3(0, 0, 31f) }, // try 20
+            swarmPositionOffset = new Vector3(0, 0, 31f) },
         new AttractorData {
             function = Attractors.HyperchaoticLorenz,
             cameraDist = 55f,
@@ -70,9 +67,7 @@ public class Swarm : MonoBehaviour {
         return attractors[(int)name];
     }
 
-    [SerializeField]
-    public AttractorName attractorName {get; private set;}
-
+    [SerializeField] public AttractorName attractorName { get; private set; }
     public AttractorData attractor;
 
     // TODO: a struct of arrays would be more efficient
@@ -103,6 +98,8 @@ public class Swarm : MonoBehaviour {
         }
     }
 
+    // NOTE: I changed `fixed timestep` from 0.02 to 0.01 in the options
+    // This made the trails look much better (smoother) at the cost of performance
     void FixedUpdate() {
         if (transitioning) {
             Transition();
@@ -112,20 +109,18 @@ public class Swarm : MonoBehaviour {
         float deltaTime = Time.deltaTime;
 
         for (int i = 0; i < resolution; i++) {
-            Transform point = points[i]; // I could put this below the first if, but looks nicer here
-
             // TODO: remove all this whack stuff?
             if (!pointData[i].isAlive) {
                 continue;
             }
-            if (pointData[i].isAlive && isWhack(point.localPosition)) {
+            if (pointData[i].isAlive && isWhack(points[i].localPosition)) {
                 string s = pointData[i].startPos.ToString("F8");
                 Debug.Log("Whack point: " + s + " Dist: " + Vector3.Distance(pointData[i].startPos, Vector3.zero));
                 pointData[i].isAlive = false;
                 continue;
             }
 
-            point.localPosition = attractor.function(point.localPosition, deltaTime, speed);
+            points[i].localPosition = attractor.function(points[i].localPosition, deltaTime, speed);
         }
     }
 
@@ -169,6 +164,13 @@ public class Swarm : MonoBehaviour {
         }
     }
 
+    void OnTogglePoints() {
+        for (int i=0; i < resolution; i++) {
+            MeshRenderer pointRenderer = points[i].GetComponent<MeshRenderer>();
+            pointRenderer.enabled = !pointRenderer.enabled;
+        }
+    }
+    
     void Transition() {
         if (transitionProgress >= transitionDuration) {
             transitioning = false;
@@ -180,15 +182,14 @@ public class Swarm : MonoBehaviour {
         progress = progress * progress; // nicer looking lerp
 
         for (int i=0; i < resolution; i++) {
-            Transform point = points[i];
             if (!pointData[i].isAlive) {
                 // revive dead points
-                point.localPosition = pointData[i].startPos;
+                points[i].localPosition = pointData[i].startPos;
                 pointData[i].isAlive = true;
                 continue;
             }
 
-            point.localPosition = Vector3.Slerp(lerpBeginPos[i], pointData[i].startPos, progress);
+            points[i].localPosition = Vector3.Slerp(lerpBeginPos[i], pointData[i].startPos, progress);
         }
     }
 }

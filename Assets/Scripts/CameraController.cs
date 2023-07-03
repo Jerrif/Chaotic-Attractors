@@ -8,7 +8,7 @@ public class CameraController : MonoBehaviour {
 
     private CameraSingleton cameraSingleton;
 
-    private Vector3 orbitDistance;
+    private Vector3 defaultOrbitDistance;
     private bool userControlling = false;
     private const float moveSpeedChangeAmount = 5f;
     private const float normalMoveSpeed = 20f;
@@ -17,27 +17,25 @@ public class CameraController : MonoBehaviour {
     private Vector3 movementInput;
     private Vector2 rotationInput;
 
-    // used to modify the origin of the clamp. This is set to initial orientation at start.
+    // used to modify the origin of the mouselook clamp. This is set to initial orientation at start of mouselook.
     private Quaternion initialOrientation;
     private Vector2 smoothMouse;
     private Vector2 accumulatedMouseDelta;
-
-    public float mouseSmoothing = 1f;
+    [SerializeField] private float mouseSmoothing = 1f;
 
     private Quaternion slerpBeginPos;
     private Vector3 orbitDistanceLerpBeginPos;
-    Vector3 positionTarget;
+    private Vector3 positionTarget;
 
     void Start() {
         cameraSingleton = CameraSingleton.Instance;
         if (cameraSingleton == null) {
             return;
         }
-        // TODO: refactor this;
-        orbitDistance = new Vector3(swarm.attractor.cameraDist, 0, 0);
-        cameraSingleton.transform.position = orbitDistance;
+        defaultOrbitDistance = new Vector3(swarm.attractor.cameraDist, 0, 0);
+        cameraSingleton.transform.position = defaultOrbitDistance;
 
-        // set the origin of the clamp to the starting rotation of the camera
+        // set the origin of the mouselook clamp to the starting rotation of the camera
         initialOrientation = cameraSingleton.transform.rotation;
     }
 
@@ -58,9 +56,7 @@ public class CameraController : MonoBehaviour {
         direction.Normalize();
         Vector3 movementVector = direction * moveSpeed * Time.deltaTime;
 
-        // TODO: don't need this temp var, just combine these two lines
-        Vector3 newPosition = currentPosition + movementVector;
-        cameraSingleton.transform.position = newPosition;
+        cameraSingleton.transform.position = currentPosition + movementVector;
     }
 
     void UpdateMouseLook() {
@@ -88,7 +84,12 @@ public class CameraController : MonoBehaviour {
     }
 
     void OnMovement(InputValue value) {
-        userControlling = true;
+        if (!userControlling) {
+            userControlling = true;
+            accumulatedMouseDelta = Vector2.zero;
+            smoothMouse = Vector2.zero;
+            initialOrientation = cameraSingleton.transform.rotation;
+        }
         movementInput = value.Get<Vector3>();
     }
 
@@ -97,7 +98,6 @@ public class CameraController : MonoBehaviour {
             userControlling = true;
             accumulatedMouseDelta = Vector2.zero;
             smoothMouse = Vector2.zero;
-            // update the origin of the clamp to the current rotation of the camera
             initialOrientation = cameraSingleton.transform.rotation;
         }
         rotationInput = value.Get<Vector2>();
@@ -117,19 +117,16 @@ public class CameraController : MonoBehaviour {
     }
 
     void OnResetPosition() {
-        cameraSingleton.transform.position = orbitDistance;
+        cameraSingleton.transform.position = defaultOrbitDistance;
         OnOrbitStart();
     }
 
     void Orbit() {
-        cameraSingleton.transform.RotateAround(swarm.attractor.swarmPositionOffset, Vector3.up, orbitSpeed * Time.deltaTime);
-
-        Vector3 lookDirection = swarm.attractor.swarmPositionOffset - cameraSingleton.transform.position;
-        float distance = lookDirection.magnitude;
-        lookDirection /= distance; // note: equivalent to lookDirection.Normalize() but apparently faster if using magnitude as well
-        Quaternion target = Quaternion.LookRotation(lookDirection);
-
         if (swarm.transitioning) {
+            Vector3 lookDirection = swarm.attractor.swarmPositionOffset - cameraSingleton.transform.position;
+            lookDirection.Normalize();
+            Quaternion target = Quaternion.LookRotation(lookDirection);
+
             if (swarm.transitionProgress == 0f) {
                 slerpBeginPos = cameraSingleton.transform.rotation;
                 orbitDistanceLerpBeginPos = cameraSingleton.transform.position;
@@ -143,6 +140,7 @@ public class CameraController : MonoBehaviour {
             cameraSingleton.transform.position = Vector3.Lerp(orbitDistanceLerpBeginPos, positionTarget, progress);
             cameraSingleton.transform.rotation = Quaternion.Slerp(slerpBeginPos, target, MySmoothstep(progress));
         } else {
+            cameraSingleton.transform.RotateAround(swarm.attractor.swarmPositionOffset, Vector3.up, orbitSpeed * Time.deltaTime);
             cameraSingleton.transform.LookAt(swarm.attractor.swarmPositionOffset);
         }
     }
