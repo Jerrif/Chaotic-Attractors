@@ -45,6 +45,7 @@ All attractors are computed on the CPU in C# and run in real-time with configura
 
 ## Building and Running
 
-Open the project in Unity (version 2021.3 or later recommended) and load the main scene from `Assets/Scenes/`. Press Play to start the visualization.
+Open the project in Unity (version 2021.3 or later recommended) and load the main scene from `Assets/Scenes/`.
+Or just download the exe from github under `releases`.
 
 <img width="909" height="512" alt="" src="https://github.com/user-attachments/assets/2bb60899-ecd7-4143-aedf-a26407849e71" />
